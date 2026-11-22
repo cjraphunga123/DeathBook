@@ -14,6 +14,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : Activity() {
     private val ink = Color.rgb(28, 42, 58)
@@ -21,6 +23,7 @@ class MainActivity : Activity() {
     private val muted = Color.rgb(100, 116, 130)
     private val warning = Color.rgb(150, 72, 30)
     private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +101,7 @@ class MainActivity : Activity() {
         page.addView(text("Prepare a request\nLearn what to check before contacting the relevant authorities.", 16f))
         page.addView(action("Open preparation checklist") { showPreparation() })
         page.addView(text("Submit a record\nStart a death-record submission request.", 16f))
-        page.addView(action("Start a demo submission") { showDemoNotice() })
+        page.addView(action("Prepare a request form") { showRequestForm() })
         page.addView(text("Verification status\nCheck the progress of a submitted request.", 16f))
         page.addView(action("View verification information") { showVerification() })
         page.addView(text("Institution access\nFor authorised organisations and officials.", 16f))
@@ -238,18 +241,93 @@ class MainActivity : Activity() {
         page.addView(action("Back to home") { showHome() })
     }
 
-    private fun showDemoNotice() {
+    private fun showRequestForm() {
         val page = basePage()
-        page.addView(text("Demo submission", 26f, ink, true))
+        page.addView(text("Prepare a request", 26f, ink, true))
         page.addView(text(
-            "The submission workflow will be added after secure accounts, privacy controls and an approved records process are in place.",
-            16f, muted
+            "Enter the details below to prepare a request. This is not an official death registration or Home Affairs submission.",
+            15f, muted
         ))
         page.addView(text(
-            "This prototype does not accept or store death records. Please do not enter real personal information.",
-            14f, warning
+            "For this initial test, use fictional details only. Do not enter an identity number, medical information, certificate details or real next-of-kin information.",
+            14f, warning, true
         ))
-        page.addView(action("Back to home") { showHome() })
+
+        val deceasedName = field("Deceased person's full name").apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        }
+        val dateOfDeath = field("Date of death (YYYY-MM-DD)").apply {
+            inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_DATE
+        }
+        val placeOfDeath = field("Place of death (town / hospital / area)").apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        }
+        val nextOfKinName = field("Next-of-kin name").apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        }
+        val nextOfKinContact = field("Next-of-kin contact (email or phone)").apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+
+        page.addView(text("Deceased person's details", 19f, ink, true))
+        page.addView(deceasedName)
+        page.addView(dateOfDeath)
+        page.addView(placeOfDeath)
+        page.addView(text("Next of kin", 19f, ink, true))
+        page.addView(nextOfKinName)
+        page.addView(nextOfKinContact)
+        page.addView(text(
+            "When saved, the request is associated with your signed-in account. It is stored as a preparation record only and is not reviewed by an authority.",
+            13f, muted
+        ))
+
+        lateinit var saveButton: Button
+        saveButton = action("Save preparation request") {
+            val user = auth.currentUser
+            val nameValue = deceasedName.text.toString().trim()
+            val dateValue = dateOfDeath.text.toString().trim()
+            val placeValue = placeOfDeath.text.toString().trim()
+            val kinNameValue = nextOfKinName.text.toString().trim()
+            val kinContactValue = nextOfKinContact.text.toString().trim()
+
+            when {
+                user == null -> Toast.makeText(this, "Please log in first.", Toast.LENGTH_LONG).show()
+                nameValue.isBlank() -> deceasedName.error = "Enter a name (use fictional details for testing)"
+                !dateValue.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) -> dateOfDeath.error = "Use YYYY-MM-DD"
+                placeValue.isBlank() -> placeOfDeath.error = "Enter a place"
+                kinNameValue.isBlank() -> nextOfKinName.error = "Enter a next-of-kin name"
+                kinContactValue.isBlank() -> nextOfKinContact.error = "Enter a contact"
+                else -> {
+                    saveButton.isEnabled = false
+                    val request = hashMapOf(
+                        "userId" to user.uid,
+                        "deceasedFullName" to nameValue,
+                        "dateOfDeath" to dateValue,
+                        "placeOfDeath" to placeValue,
+                        "nextOfKinName" to kinNameValue,
+                        "nextOfKinContact" to kinContactValue,
+                        "status" to "PREPARATION_ONLY",
+                        "createdAt" to FieldValue.serverTimestamp()
+                    )
+                    db.collection("death_requests").add(request)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Preparation request saved.", Toast.LENGTH_LONG).show()
+                            showHome()
+                        }
+                        .addOnFailureListener { error ->
+                            saveButton.isEnabled = true
+                            Toast.makeText(
+                                this,
+                                "Could not save. Check Firestore security rules and internet connection. " +
+                                    (error.localizedMessage ?: ""),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                }
+            }
+        }
+        page.addView(saveButton)
+        page.addView(action("Cancel and return home") { showHome() })
     }
 
     private fun showVerification() {
