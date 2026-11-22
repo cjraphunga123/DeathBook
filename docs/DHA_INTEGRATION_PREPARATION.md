@@ -8,7 +8,7 @@ The founder currently operates as an individual. DeathBook is intended to serve:
 - members of the public who submit a request or ask for help with a record; and
 - verified institutional users with a lawful, approved purpose.
 
-Before applying for production access, establish an appropriate South African legal operating entity and obtain legal advice on the applicable accreditation route. Do not represent DeathBook as a DHA partner, agent, or approved verification provider.
+Before applying for production access, ask DHA whether an individual/sole proprietor may apply or whether a registered juristic person is required for this service. Obtain South African legal advice on the suitable operating structure and accreditation route; do not assume incorporation alone grants eligibility. Do not represent DeathBook as a DHA partner, agent, or approved verification provider.
 
 ## Official route
 
@@ -66,7 +66,7 @@ DHA Gazette 54610 (4 May 2026) describes real-time verification for accredited t
 
 ## Immediate action checklist
 
-- [ ] Decide whether to register a company or other suitable legal entity.
+- [ ] Ask DHA whether an individual/sole proprietor is eligible or whether a registered company/other juristic person is required; then choose the appropriate operating structure.
 - [ ] Obtain legal advice on the appropriate applicant and POPIA role.
 - [ ] Email DHA at verifications@dha.gov.za requesting current onboarding requirements for death/life-event verification.
 - [ ] Ask for the exact accreditation criteria, data-sharing agreement, permitted user groups, technical specification, fees, test access, and production approval process.
