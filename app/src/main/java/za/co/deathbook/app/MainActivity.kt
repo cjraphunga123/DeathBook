@@ -5,18 +5,22 @@ import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.InputType
+import android.util.Patterns
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : Activity() {
     private val ink = Color.rgb(28, 42, 58)
     private val teal = Color.rgb(0, 112, 112)
     private val muted = Color.rgb(100, 116, 130)
     private val warning = Color.rgb(150, 72, 30)
+    private val auth by lazy { FirebaseAuth.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,21 +57,18 @@ class MainActivity : Activity() {
             setOnClickListener { onTap() }
         }
 
-    private fun field(hintText: String, password: Boolean = false): EditText =
-        EditText(this).apply {
-            hint = hintText
-            textSize = 16f
-            setSingleLine(true)
-            inputType = if (password) {
-                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            } else if (hintText.contains("email", ignoreCase = true)) {
-                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-            } else {
-                InputType.TYPE_CLASS_TEXT
-            }
-            setPadding(14, 10, 14, 10)
-            setBackgroundColor(Color.WHITE)
+    private fun field(hintText: String, password: Boolean = false): EditText = EditText(this).apply {
+        hint = hintText
+        textSize = 16f
+        setSingleLine(true)
+        inputType = if (password) {
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        } else {
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         }
+        setPadding(14, 10, 14, 10)
+        setBackgroundColor(Color.WHITE)
+    }
 
     private fun showHome() {
         val page = basePage()
@@ -77,9 +78,22 @@ class MainActivity : Activity() {
             "A secure digital service concept for submitting and managing death-record requests.",
             16f, muted
         ))
-        page.addView(text("Your account", 20f, ink, true))
-        page.addView(action("Create an account") { showRegister() })
-        page.addView(action("Log in") { showLogin() })
+
+        val user = auth.currentUser
+        if (user == null) {
+            page.addView(text("Your account", 20f, ink, true))
+            page.addView(action("Create an account") { showRegister() })
+            page.addView(action("Log in") { showLogin() })
+        } else {
+            page.addView(text("Signed in as", 18f, ink, true))
+            page.addView(text(user.email ?: "Authenticated user", 16f, teal))
+            page.addView(action("Log out") {
+                auth.signOut()
+                showHome()
+                Toast.makeText(this, "You have logged out.", Toast.LENGTH_SHORT).show()
+            })
+        }
+
         page.addView(text("Your services", 20f, ink, true))
         page.addView(text("Prepare a request\nLearn what to check before contacting the relevant authorities.", 16f))
         page.addView(action("Open preparation checklist") { showPreparation() })
@@ -90,25 +104,55 @@ class MainActivity : Activity() {
         page.addView(text("Institution access\nFor authorised organisations and officials.", 16f))
         page.addView(action("Institution information") { showInstitution() })
         page.addView(text(
-            "IMPORTANT: This first build is a demonstration only. It is not connected to the Department of Home Affairs and does not verify, register or certify deaths. Do not enter real personal or identity information.",
+            "IMPORTANT: This build is a demonstration. It is not connected to the Department of Home Affairs and does not verify, register or certify deaths. Do not enter real personal or identity information.",
             13f, warning
         ))
-        page.addView(text("DeathBook • Version 1.0.0", 12f, muted))
+        page.addView(text("DeathBook • Version 1.1.0", 12f, muted))
     }
 
     private fun showRegister() {
         val page = basePage()
         page.addView(text("Create your account", 26f, ink, true))
-        page.addView(text("Public user registration", 17f, teal, true))
-        page.addView(text("Enter test details only. Account creation is not active in this prototype.", 14f, warning))
-        page.addView(field("Full name"))
-        page.addView(field("Email address"))
-        page.addView(field("Create password", password = true))
-        page.addView(field("Confirm password", password = true))
-        page.addView(action("Create account (demo only)") {
-            Toast.makeText(this, "Demo only: no account or password was saved.", Toast.LENGTH_LONG).show()
-        })
-        page.addView(action("Already registered? Log in") { showLogin() })
+        page.addView(text("Register with your email address", 16f, teal, true))
+        page.addView(text("Use an email address you can access. Passwords must contain at least 6 characters.", 14f, muted))
+        val email = field("Email address")
+        val password = field("Password (minimum 6 characters)", password = true)
+        val confirm = field("Confirm password", password = true)
+        page.addView(email)
+        page.addView(password)
+        page.addView(confirm)
+        val register = action("Create account") {
+            val emailValue = email.text.toString().trim()
+            val passwordValue = password.text.toString()
+            val confirmValue = confirm.text.toString()
+            when {
+                !Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() ->
+                    email.error = "Enter a valid email address"
+                passwordValue.length < 6 ->
+                    password.error = "Use at least 6 characters"
+                passwordValue != confirmValue ->
+                    confirm.error = "Passwords do not match"
+                else -> {
+                    register.isEnabled = false
+                    auth.createUserWithEmailAndPassword(emailValue, passwordValue)
+                        .addOnCompleteListener(this) { task ->
+                            register.isEnabled = true
+                            if (task.isSuccessful) {
+                                Toast.makeText(this, "Account created successfully.", Toast.LENGTH_LONG).show()
+                                showHome()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    task.exception?.localizedMessage ?: "Registration failed. Please try again.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                }
+            }
+        }
+        page.addView(register)
+        page.addView(action("Already have an account? Log in") { showLogin() })
         page.addView(action("Back to home") { showHome() })
     }
 
@@ -116,11 +160,52 @@ class MainActivity : Activity() {
         val page = basePage()
         page.addView(text("Welcome back", 26f, ink, true))
         page.addView(text("Log in to DeathBook", 17f, teal, true))
-        page.addView(text("Use test details only. Sign-in is not connected in this prototype.", 14f, warning))
-        page.addView(field("Email address"))
-        page.addView(field("Password", password = true))
-        page.addView(action("Log in (demo only)") {
-            Toast.makeText(this, "Demo only: sign-in is not active and details were not saved.", Toast.LENGTH_LONG).show()
+        val email = field("Email address")
+        val password = field("Password", password = true)
+        page.addView(email)
+        page.addView(password)
+        val login = action("Log in") {
+            val emailValue = email.text.toString().trim()
+            val passwordValue = password.text.toString()
+            when {
+                !Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() ->
+                    email.error = "Enter a valid email address"
+                passwordValue.isEmpty() ->
+                    password.error = "Enter your password"
+                else -> {
+                    login.isEnabled = false
+                    auth.signInWithEmailAndPassword(emailValue, passwordValue)
+                        .addOnCompleteListener(this) { task ->
+                            login.isEnabled = true
+                            if (task.isSuccessful) {
+                                Toast.makeText(this, "Login successful.", Toast.LENGTH_SHORT).show()
+                                showHome()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    task.exception?.localizedMessage ?: "Login failed. Check your details.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                }
+            }
+        }
+        page.addView(login)
+        page.addView(action("Forgot password? Send reset email") {
+            val emailValue = email.text.toString().trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
+                email.error = "Enter your account email first"
+            } else {
+                auth.sendPasswordResetEmail(emailValue).addOnCompleteListener(this) { task ->
+                    val message = if (task.isSuccessful) {
+                        "If an account exists for this email, a reset link has been sent."
+                    } else {
+                        task.exception?.localizedMessage ?: "Could not send reset email."
+                    }
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                }
+            }
         })
         page.addView(action("Create a new account") { showRegister() })
         page.addView(action("Back to home") { showHome() })
