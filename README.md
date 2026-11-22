@@ -22,6 +22,10 @@ The debug APK is normally generated at:
 
 `app/build/outputs/apk/debug/app-debug.apk`
 
+## DHA integration preparation
+
+A preparation plan for the South African Department of Home Affairs verification route is available in [`docs/DHA_INTEGRATION_PREPARATION.md`](docs/DHA_INTEGRATION_PREPARATION.md). DeathBook has no DHA approval, credentials, API connection, or authority to verify deaths. Do not enter real personal information into the prototype.
+
 ## Planned work
 
 1. Secure authentication and account roles.
