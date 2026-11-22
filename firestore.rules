@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /death_requests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly([
+          'userId',
+          'deceasedFullName',
+          'dateOfDeath',
+          'placeOfDeath',
+          'nextOfKinName',
+          'nextOfKinContact',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.deceasedFullName is string
+        && request.resource.data.deceasedFullName.size() > 0
+        && request.resource.data.deceasedFullName.size() <= 120
+        && request.resource.data.dateOfDeath is string
+        && request.resource.data.placeOfDeath is string
+        && request.resource.data.placeOfDeath.size() <= 160
+        && request.resource.data.nextOfKinName is string
+        && request.resource.data.nextOfKinName.size() <= 120
+        && request.resource.data.nextOfKinContact is string
+        && request.resource.data.nextOfKinContact.size() <= 160
+        && request.resource.data.status == 'PREPARATION_ONLY'
+        && request.resource.data.createdAt == request.time;
+
+      allow read, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}
