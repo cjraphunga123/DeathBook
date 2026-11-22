@@ -4,18 +4,16 @@ import android.app.Activity
 import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
-import android.view.Gravity
-import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 
 class MainActivity : Activity() {
     private val ink = Color.rgb(28, 42, 58)
     private val teal = Color.rgb(0, 112, 112)
     private val muted = Color.rgb(100, 116, 130)
+    private val warning = Color.rgb(150, 72, 30)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +59,8 @@ class MainActivity : Activity() {
             16f, muted
         ))
         page.addView(text("Your services", 20f, ink, true))
+        page.addView(text("Prepare a request\nLearn what to check before contacting the relevant authorities.", 16f))
+        page.addView(action("Open preparation checklist") { showPreparation() })
         page.addView(text("Submit a record\nStart a death-record submission request.", 16f))
         page.addView(action("Start a demo submission") { showDemoNotice() })
         page.addView(text("Verification status\nCheck the progress of a submitted request.", 16f))
@@ -69,9 +69,34 @@ class MainActivity : Activity() {
         page.addView(action("Institution information") { showInstitution() })
         page.addView(text(
             "IMPORTANT: This first build is a demonstration only. It is not connected to the Department of Home Affairs and does not verify, register or certify deaths. Do not enter real personal or identity information.",
-            13f, Color.rgb(150, 72, 30)
+            13f, warning
         ))
         page.addView(text("DeathBook • Version 1.0.0", 12f, muted))
+    }
+
+    private fun showPreparation() {
+        val page = basePage()
+        page.addView(text("Prepare a request", 26f, ink, true))
+        page.addView(text(
+            "Use this general checklist to prepare for an enquiry. It is not an official list of documents or a substitute for instructions from the Department of Home Affairs.",
+            15f, muted
+        ))
+        page.addView(text("Before contacting an authority", 19f, ink, true))
+        page.addView(text(
+            "1. Confirm the correct death-registration process with the Department of Home Affairs.\n\n" +
+            "2. Ask which documents are required for your particular circumstances.\n\n" +
+            "3. Check whether a medical practitioner, funeral undertaker or other authorised person must complete part of the process.\n\n" +
+            "4. Confirm where and how the documents must be submitted.\n\n" +
+            "5. Keep original documents secure and share copies only through an official, trusted channel.\n\n" +
+            "6. Keep any reference number or receipt provided by the authority.",
+            16f, ink
+        ))
+        page.addView(text("Protect personal information", 19f, ink, true))
+        page.addView(text(
+            "Do not enter identity numbers, medical details, certificates or other sensitive personal information into this demonstration app. It does not securely submit or store records.",
+            14f, warning
+        ))
+        page.addView(action("Back to home") { showHome() })
     }
 
     private fun showDemoNotice() {
@@ -83,7 +108,7 @@ class MainActivity : Activity() {
         ))
         page.addView(text(
             "This prototype does not accept or store death records. Please do not enter real personal information.",
-            14f, Color.rgb(150, 72, 30)
+            14f, warning
         ))
         page.addView(action("Back to home") { showHome() })
     }
@@ -95,7 +120,7 @@ class MainActivity : Activity() {
             "Official verification is not yet connected. A future integration will require formal authorisation and an approved Department of Home Affairs interface.",
             16f, muted
         ))
-        page.addView(text("Current status: Not connected", 17f, Color.rgb(150, 72, 30), true))
+        page.addView(text("Current status: Not connected", 17f, warning, true))
         page.addView(action("Back to home") { showHome() })
     }
 
