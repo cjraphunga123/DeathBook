@@ -121,7 +121,8 @@ class MainActivity : Activity() {
         page.addView(email)
         page.addView(password)
         page.addView(confirm)
-        val register = action("Create account") {
+        lateinit var register: Button
+        register = action("Create account") {
             val emailValue = email.text.toString().trim()
             val passwordValue = password.text.toString()
             val confirmValue = confirm.text.toString()
@@ -164,7 +165,8 @@ class MainActivity : Activity() {
         val password = field("Password", password = true)
         page.addView(email)
         page.addView(password)
-        val login = action("Log in") {
+        lateinit var login: Button
+        login = action("Log in") {
             val emailValue = email.text.toString().trim()
             val passwordValue = password.text.toString()
             when {
