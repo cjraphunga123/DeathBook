@@ -57,7 +57,7 @@ class MainActivity : Activity() {
         EditText(this).apply {
             hint = hintText
             textSize = 16f
-            singleLine = true
+            setSingleLine(true)
             inputType = if (password) {
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             } else if (hintText.contains("email", ignoreCase = true)) {
