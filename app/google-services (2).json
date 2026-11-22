@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1078285071514",
+    "project_id": "deathbook-aa406",
+    "storage_bucket": "deathbook-aa406.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078285071514:android:d5975c4f257480671c1b23",
+        "android_client_info": {
+          "package_name": "za.co.deathbook.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD14oBgjvZ_YWb_nKsDP3W2orwt6Y7NZDY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
