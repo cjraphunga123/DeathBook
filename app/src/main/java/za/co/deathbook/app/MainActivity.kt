@@ -4,10 +4,13 @@ import android.app.Activity
 import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.InputType
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 
 class MainActivity : Activity() {
     private val ink = Color.rgb(28, 42, 58)
@@ -50,6 +53,22 @@ class MainActivity : Activity() {
             setOnClickListener { onTap() }
         }
 
+    private fun field(hintText: String, password: Boolean = false): EditText =
+        EditText(this).apply {
+            hint = hintText
+            textSize = 16f
+            singleLine = true
+            inputType = if (password) {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            } else if (hintText.contains("email", ignoreCase = true)) {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            } else {
+                InputType.TYPE_CLASS_TEXT
+            }
+            setPadding(14, 10, 14, 10)
+            setBackgroundColor(Color.WHITE)
+        }
+
     private fun showHome() {
         val page = basePage()
         page.addView(text("DEATHBOOK", 14f, teal, true))
@@ -58,6 +77,9 @@ class MainActivity : Activity() {
             "A secure digital service concept for submitting and managing death-record requests.",
             16f, muted
         ))
+        page.addView(text("Your account", 20f, ink, true))
+        page.addView(action("Create an account") { showRegister() })
+        page.addView(action("Log in") { showLogin() })
         page.addView(text("Your services", 20f, ink, true))
         page.addView(text("Prepare a request\nLearn what to check before contacting the relevant authorities.", 16f))
         page.addView(action("Open preparation checklist") { showPreparation() })
@@ -72,6 +94,36 @@ class MainActivity : Activity() {
             13f, warning
         ))
         page.addView(text("DeathBook • Version 1.0.0", 12f, muted))
+    }
+
+    private fun showRegister() {
+        val page = basePage()
+        page.addView(text("Create your account", 26f, ink, true))
+        page.addView(text("Public user registration", 17f, teal, true))
+        page.addView(text("Enter test details only. Account creation is not active in this prototype.", 14f, warning))
+        page.addView(field("Full name"))
+        page.addView(field("Email address"))
+        page.addView(field("Create password", password = true))
+        page.addView(field("Confirm password", password = true))
+        page.addView(action("Create account (demo only)") {
+            Toast.makeText(this, "Demo only: no account or password was saved.", Toast.LENGTH_LONG).show()
+        })
+        page.addView(action("Already registered? Log in") { showLogin() })
+        page.addView(action("Back to home") { showHome() })
+    }
+
+    private fun showLogin() {
+        val page = basePage()
+        page.addView(text("Welcome back", 26f, ink, true))
+        page.addView(text("Log in to DeathBook", 17f, teal, true))
+        page.addView(text("Use test details only. Sign-in is not connected in this prototype.", 14f, warning))
+        page.addView(field("Email address"))
+        page.addView(field("Password", password = true))
+        page.addView(action("Log in (demo only)") {
+            Toast.makeText(this, "Demo only: sign-in is not active and details were not saved.", Toast.LENGTH_LONG).show()
+        })
+        page.addView(action("Create a new account") { showRegister() })
+        page.addView(action("Back to home") { showHome() })
     }
 
     private fun showPreparation() {
