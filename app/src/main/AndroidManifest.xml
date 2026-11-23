@@ -2,6 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="false"
+        android:icon="@drawable/deathbook_icon"
         android:label="DeathBook"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:supportsRtl="true">
