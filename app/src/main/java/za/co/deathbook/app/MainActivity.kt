@@ -309,7 +309,7 @@ class MainActivity : Activity() {
                         "status" to "PREPARATION_ONLY",
                         "createdAt" to FieldValue.serverTimestamp()
                     )
-                    db.collection("death_requests").add(request)
+                    db.collection("death_records").add(request)
                         .addOnSuccessListener {
                             Toast.makeText(this, "Preparation request saved.", Toast.LENGTH_LONG).show()
                             showHome()
